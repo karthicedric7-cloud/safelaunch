@@ -1,15 +1,20 @@
 {
-  "name": "deploycheck",
-  "version": "1.0.0",
+  "name": "safelaunch",
+  "version": "1.0.6",
   "description": "Backend Reliability Infrastructure - catch what breaks production before it breaks",
   "main": "index.js",
   "bin": {
-    "deploycheck": "./bin/deploycheck.js"
+    "safelaunch": "./bin/deploycheck.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["deployment", "environment", "reliability", "devops"],
+  "keywords": [
+    "deployment",
+    "environment",
+    "reliability",
+    "devops"
+  ],
   "author": "",
   "license": "ISC"
 }
