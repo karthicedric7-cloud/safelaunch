@@ -1,6 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
+function detectProjectType(cwd) {
+  if (fs.existsSync(path.join(cwd, 'vite.config.js')) ||
+      fs.existsSync(path.join(cwd, 'vite.config.ts'))) {
+    return 'vite';
+  }
+  if (fs.existsSync(path.join(cwd, 'next.config.js')) ||
+      fs.existsSync(path.join(cwd, 'next.config.ts'))) {
+    return 'next';
+  }
+  const packagePath = path.join(cwd, 'package.json');
+  if (fs.existsSync(packagePath)) {
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    const deps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
+    if (deps['react-scripts']) return 'cra';
+  }
+  return 'node';
+}
+
 function readManifest() {
   const manifestPath = path.join(process.cwd(), 'env.manifest.json');
   if (!fs.existsSync(manifestPath)) {
@@ -80,8 +98,13 @@ function checkDependencyDrift() {
 function validate() {
   console.log('\nRunning safelaunch...\n');
 
+  const cwd = process.cwd();
   const manifest = readManifest();
   const { envVars, duplicates } = readEnv();
+
+  const projectType = manifest.projectType || detectProjectType(cwd);
+  const typeLabels = { vite: 'Vite', next: 'Next.js', cra: 'Create React App', node: 'Node.js' };
+  console.log('project type: ' + (typeLabels[projectType] || 'Node.js') + '\n');
 
   const missing = [];
   const empty = [];
