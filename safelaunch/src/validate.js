@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { track, shutdown } = require('./telemetry');
 
 function detectProjectType(cwd) {
   if (fs.existsSync(path.join(cwd, 'vite.config.js')) ||
@@ -95,7 +96,50 @@ function checkDependencyDrift() {
   return { notInstalled: false, missing };
 }
 
-function validate() {
+function checkPrefixes(envVars, projectType) {
+  const warnings = [];
+  for (const key of Object.keys(envVars)) {
+    if (key === 'NODE_ENV') continue;
+    if (projectType === 'vite' && !key.startsWith('VITE_')) {
+      warnings.push(key + '   missing VITE_ prefix (won\'t be exposed to client)');
+    }
+    if (projectType === 'cra' && !key.startsWith('REACT_APP_')) {
+      warnings.push(key + '   missing REACT_APP_ prefix (won\'t be exposed to client)');
+    }
+    if (projectType === 'next' && key.startsWith('NEXT_PUBLIC_') === false) {
+      // server-side only — no warning needed
+    }
+  }
+  return warnings;
+}
+
+function checkEnvPriority(cwd, projectType) {
+  if (projectType !== 'next') return [];
+  const warnings = [];
+  const fileVars = {};
+  const envFiles = ['.env', '.env.local', '.env.development', '.env.production'];
+  for (const file of envFiles) {
+    const filePath = path.join(cwd, file);
+    if (!fs.existsSync(filePath)) continue;
+    const vars = {};
+    const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+    for (const line of lines) {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) vars[match[1].trim()] = match[2].trim();
+    }
+    fileVars[file] = vars;
+  }
+  if (fileVars['.env'] && fileVars['.env.local']) {
+    for (const key of Object.keys(fileVars['.env'])) {
+      if (fileVars['.env.local'][key]) {
+        warnings.push(key + '   in both .env and .env.local (.env.local takes priority)');
+      }
+    }
+  }
+  return warnings;
+}
+
+async function validate() {
   console.log('\nRunning safelaunch...\n');
 
   const cwd = process.cwd();
@@ -123,6 +167,8 @@ function validate() {
   const runtimeMismatch = checkRuntime(manifest);
   const exampleMissing = checkEnvExample(envVars);
   const drift = checkDependencyDrift();
+  const prefixWarnings = checkPrefixes(envVars, projectType);
+  const priorityWarnings = checkEnvPriority(cwd, projectType);
 
   if (runtimeMismatch) {
     console.log('⚠️  RUNTIME MISMATCH\n');
@@ -160,6 +206,22 @@ function validate() {
     console.log('');
   }
 
+  if (prefixWarnings.length > 0) {
+    console.log('⚠️  PREFIX WARNINGS (' + prefixWarnings.length + ' found)\n');
+    for (const w of prefixWarnings) {
+      console.log('   ' + w);
+    }
+    console.log('');
+  }
+
+  if (priorityWarnings.length > 0) {
+    console.log('⚠️  ENV FILE PRIORITY (' + priorityWarnings.length + ' found)\n');
+    for (const w of priorityWarnings) {
+      console.log('   ' + w);
+    }
+    console.log('');
+  }
+
   if (empty.length > 0) {
     console.log('❌ EMPTY VARIABLES (' + empty.length + ' found)\n');
     for (const key of empty) {
@@ -184,13 +246,34 @@ function validate() {
     console.log('');
   }
 
-  const hasFailed = runtimeMismatch || missing.length > 0 || empty.length > 0 || duplicates.length > 0 || exampleMissing.length > 0 || (drift && (drift.notInstalled || drift.missing.length > 0));
+  const hasFailed = runtimeMismatch || missing.length > 0 || empty.length > 0 ||
+    duplicates.length > 0 || exampleMissing.length > 0 ||
+    prefixWarnings.length > 0 || priorityWarnings.length > 0 ||
+    (drift && (drift.notInstalled || drift.missing.length > 0));
 
   if (hasFailed) {
     console.log('Your environment is not ready for production.\n');
+    await track('safelaunch_validate_run', {
+      project_type: projectType,
+      passed: false,
+      missing: missing.length,
+      empty: empty.length,
+      duplicates: duplicates.length,
+      runtime_mismatch: !!runtimeMismatch,
+      dependency_drift: !!(drift && drift.missing.length > 0),
+      prefix_warnings: prefixWarnings.length,
+      priority_warnings: priorityWarnings.length
+    });
+    await shutdown();
     process.exit(1);
   } else {
     console.log('Your environment is ready for production.\n');
+    await track('safelaunch_validate_run', {
+      project_type: projectType,
+      passed: true,
+      vars_passing: passing.length
+    });
+    await shutdown();
   }
 }
 

@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
+const { track, shutdown } = require('./telemetry');
 
 function detectProjectType(cwd) {
   if (fs.existsSync(path.join(cwd, 'vite.config.js')) ||
-      fs.existsSync(path.join(cwd, 'vite.config.ts'))) {
+    fs.existsSync(path.join(cwd, 'vite.config.ts'))) {
     return 'vite';
   }
   if (fs.existsSync(path.join(cwd, 'next.config.js')) ||
-      fs.existsSync(path.join(cwd, 'next.config.ts'))) {
+    fs.existsSync(path.join(cwd, 'next.config.ts'))) {
     return 'next';
   }
   const packagePath = path.join(cwd, 'package.json');
@@ -38,20 +39,20 @@ function scanFiles(dir, extensions, pattern, found = new Set()) {
   return found;
 }
 
-function init() {
+async function init() {
   console.log('\nscanning project for environment variables...\n');
-
   const cwd = process.cwd();
   const manifestPath = path.join(cwd, 'env.manifest.json');
 
   if (fs.existsSync(manifestPath)) {
     console.log('env.manifest.json already exists. delete it first.\n');
+    await track('safelaunch_init_already_exists');
+    await shutdown();
     return;
   }
 
   const projectType = detectProjectType(cwd);
   const extensions = ['.js', '.ts', '.jsx', '.tsx', '.vue', '.svelte'];
-
   let pattern;
   let typeLabel;
 
@@ -70,11 +71,12 @@ function init() {
   }
 
   console.log('detected project type: ' + typeLabel + '\n');
-
   const found = scanFiles(cwd, extensions, pattern);
 
   if (found.size === 0) {
     console.log('no environment variables found in your project.\n');
+    await track('safelaunch_init_run', { project_type: projectType, vars_found: 0 });
+    await shutdown();
     return;
   }
 
@@ -97,6 +99,9 @@ function init() {
     console.log('  ' + key);
   }
   console.log('\ncreated env.manifest.json\n');
+
+  await track('safelaunch_init_run', { project_type: projectType, vars_found: found.size });
+  await shutdown();
 }
 
 init();

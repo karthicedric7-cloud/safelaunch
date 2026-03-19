@@ -1,5 +1,4 @@
 # safelaunch
-
 > Catch what breaks production before it breaks.
 
 safelaunch is a comprehensive environment validator for JavaScript projects. Run it before every push to catch everything that will break production.
@@ -24,7 +23,7 @@ safelaunch validate
 
 ## What safelaunch checks
 
-safelaunch validate runs 7 checks:
+safelaunch validate runs 11 checks:
 
 1. Missing required environment variables
 2. Empty required environment variables
@@ -33,12 +32,16 @@ safelaunch validate runs 7 checks:
 5. Dependencies not installed
 6. Dependency drift (in package.json but not installed)
 7. Variables in .env.example but missing from .env
+8. VITE_ prefix warning (Vite projects — variables without VITE_ won't be exposed to the client)
+9. REACT_APP_ prefix warning (CRA projects — variables without REACT_APP_ won't be exposed to the client)
+10. NEXT_PUBLIC_ prefix awareness (Next.js — flags variables intended for the client)
+11. .env file priority conflicts (Next.js — warns when .env.local overrides .env silently)
 
 ## Example output
 
 Running safelaunch...
 
-project type: Node.js
+project type: Next.js
 
 ⚠️  RUNTIME MISMATCH
 
@@ -48,6 +51,10 @@ project type: Node.js
 ⚠️  DEPENDENCY DRIFT (1 found)
 
    express   in package.json but not installed
+
+⚠️  ENV FILE PRIORITY (1 found)
+
+   DATABASE_URL   in both .env and .env.local (.env.local takes priority)
 
 ❌ EMPTY VARIABLES (1 found)
 
@@ -68,9 +75,9 @@ Your environment is not ready for production.
 safelaunch automatically detects your project type.
 
 - Node.js       scans process.env
-- Next.js       scans process.env
-- Vite          scans import.meta.env
-- React CRA     scans process.env REACT_APP_ variables
+- Next.js       scans process.env, checks NEXT_PUBLIC_ and .env priority
+- Vite          scans import.meta.env, checks VITE_ prefix
+- React CRA     scans process.env, checks REACT_APP_ prefix
 
 ## CI Integration
 
@@ -78,7 +85,6 @@ Add this to your GitHub Actions workflow:
 
 - name: Install safelaunch
   run: npm install -g safelaunch
-
 - name: Validate environment
   run: safelaunch validate
 
@@ -87,5 +93,6 @@ Blocks deployments automatically if any check fails.
 ## Built by Orches
 
 Deployment Reliability Infrastructure.
+
 GitHub: https://github.com/karthicedric7-cloud/safelaunch
 VS Code: https://marketplace.visualstudio.com/items?itemName=Orches.deploycheck-vscode
