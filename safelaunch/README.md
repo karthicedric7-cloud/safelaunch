@@ -21,6 +21,18 @@ Scans your entire codebase, finds every environment variable your app uses, and 
 
 safelaunch validate
 
+## Auto-validate on every push (Git Hook)
+
+Install the hook once and safelaunch validate runs automatically before every git push:
+
+safelaunch hook install
+
+If validation fails the push is blocked until you fix the issues. Never accidentally push a broken environment again.
+
+To remove the hook:
+
+safelaunch hook uninstall
+
 ## What safelaunch checks
 
 safelaunch validate runs 11 checks:

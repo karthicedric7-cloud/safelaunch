@@ -1,6 +1,6 @@
 {
   "name": "safelaunch",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Backend Reliability Infrastructure - catch what breaks production before it breaks",
   "main": "index.js",
   "bin": {
