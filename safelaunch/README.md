@@ -1,110 +1,123 @@
 # safelaunch
-> Catch what breaks production before it breaks.
 
-safelaunch is a comprehensive environment validator for JavaScript projects. Run it before every push to catch everything that will break production.
+> Ship without breaking production ever.
 
-Works with Node.js, Next.js, Vite, and Create React App projects. Automatically detects your project type and runs the right checks.
+[![npm version](https://badge.fury.io/js/safelaunch.svg)](https://www.npmjs.com/package/safelaunch)
 
-## Install
+safelaunch validates your environment before every push. Catches missing variables, empty values, duplicates, dependency drift, and prefix misconfigurations — before they reach production.
 
-npm install -g safelaunch
+Works with **Node.js, Next.js, Vite, and Create React App**. Not just backend. Any JavaScript project.
 
-## Two commands. That is it.
+🌐 [orches.dev](https://karthicedric7-cloud.github.io/Orches)
 
-**Step 1: Generate your environment manifest**
+---
 
-safelaunch init
+## Privacy & Security
 
-Scans your entire codebase, finds every environment variable your app uses, and generates env.manifest.json automatically. Works with process.env and import.meta.env.
+safelaunch runs **entirely on your machine**. It never sends your environment variables, secrets, or any project data to external servers. Your `.env` files stay local. Always.
 
-**Step 2: Validate before every push**
+---
 
-safelaunch validate
+## Try it right now — zero setup
+```bash
+npx safelaunch scan
+```
 
-## Auto-validate on every push (Git Hook)
+No installation. No config. Just run it in any JavaScript project.
 
-Install the hook once and safelaunch validate runs automatically before every git push:
+Scans your entire codebase, checks your `.env`, and tells you exactly what would break your next deploy.
+```
+Scanning your project...
 
-safelaunch hook install
+Detected: Next.js
 
-If validation fails the push is blocked until you fix the issues. Never accidentally push a broken environment again.
+Found 8 env variables in your codebase
 
-To remove the hook:
+⚠️  DUPLICATE VARIABLES (1 found)
 
-safelaunch hook uninstall
+   DATABASE_URL   defined more than once in .env
 
-## What safelaunch checks
+❌ MISSING VARIABLES (2 found)
 
-safelaunch validate runs 11 checks:
+   NEXTAUTH_SECRET   missing from .env
+   STRIPE_SECRET_KEY   missing from .env
 
-1. Missing required environment variables
-2. Empty required environment variables
-3. Runtime version mismatch (Node version)
-4. Duplicate variables in .env
-5. Dependencies not installed
-6. Dependency drift (in package.json but not installed)
-7. Variables in .env.example but missing from .env
-8. VITE_ prefix warning (Vite projects — variables without VITE_ won't be exposed to the client)
-9. REACT_APP_ prefix warning (CRA projects — variables without REACT_APP_ won't be exposed to the client)
-10. NEXT_PUBLIC_ prefix awareness (Next.js — flags variables intended for the client)
-11. .env file priority conflicts (Next.js — warns when .env.local overrides .env silently)
-
-## Example output
-
-Running safelaunch...
-
-project type: Next.js
-
-⚠️  RUNTIME MISMATCH
-
-   Node required: 18
-   Node actual:   20
-
-⚠️  DEPENDENCY DRIFT (1 found)
-
-   express   in package.json but not installed
-
-⚠️  ENV FILE PRIORITY (1 found)
-
-   DATABASE_URL   in both .env and .env.local (.env.local takes priority)
-
-❌ EMPTY VARIABLES (1 found)
-
-   DATABASE_URL   required but empty in .env
-
-❌ MISSING VARIABLES (1 found)
-
-   REDIS_URL   required but missing from .env
-
-✅ PASSING (1)
+✅ PASSING (6)
 
    API_KEY   present
+   NODE_ENV   present
+   ...
 
-Your environment is not ready for production.
+Your next deploy would have failed.
 
-## Supported project types
+Run safelaunch init to lock this in permanently.
+```
 
-safelaunch automatically detects your project type.
+---
 
-- Node.js       scans process.env
-- Next.js       scans process.env, checks NEXT_PUBLIC_ and .env priority
-- Vite          scans import.meta.env, checks VITE_ prefix
-- React CRA     scans process.env, checks REACT_APP_ prefix
+## Installation
+```bash
+npm install -g safelaunch
+```
+
+---
+
+## Lock it in permanently
+
+Once you've seen what scan finds, lock it in with two commands:
+
+**Step 1 — Generate your environment manifest**
+```bash
+safelaunch init
+```
+
+Scans your codebase and generates an `env.manifest.json` contract file automatically.
+
+**Step 2 — Validate before every push**
+```bash
+safelaunch validate
+```
+
+Runs 11 checks against your `.env` and tells you exactly what will break before it does.
+
+---
+
+## Never think about it again — install the git hook
+```bash
+safelaunch hook install
+```
+
+Blocks `git push` automatically if validation fails. Set it once, forget about it.
+
+---
+
+## What it checks
+
+1. Missing required variables
+2. Empty variables
+3. Runtime version mismatch
+4. Duplicate variables
+5. Dependencies not installed
+6. Dependency drift
+7. `.env` vs `.env.example` sync
+8. `VITE_` prefix validation
+9. `REACT_APP_` prefix validation
+10. `NEXT_PUBLIC_` awareness
+11. `.env` file priority order
+
+---
 
 ## CI Integration
 
-Add this to your GitHub Actions workflow:
-
+Block deployments automatically by adding this to your GitHub Actions workflow:
+```yaml
 - name: Install safelaunch
   run: npm install -g safelaunch
+
 - name: Validate environment
   run: safelaunch validate
+```
 
-Blocks deployments automatically if any check fails.
+---
 
-## Built by Orches
-
-Deployment Reliability Infrastructure.
-
-GitHub: https://github.com/karthicedric7-cloud/safelaunch
-VS Code: https://marketplace.visualstudio.com/items?itemName=Orches.deploycheck-vscode
+Built by [Karthi Cedric](https://twitter.com/karthiced) · Part of [Orches](https://karthicedric7-cloud.github.io/Orches)

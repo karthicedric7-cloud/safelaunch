@@ -1,78 +1,88 @@
-# deploycheck
+# safelaunch
 
-> Catch what breaks production before it breaks.
+> Stop breaking production over environment variables.
 
-🌐 https://karthicedric7-cloud.github.io/Orches
+[![npm version](https://badge.fury.io/js/safelaunch.svg)](https://www.npmjs.com/package/safelaunch)
 
-deploycheck is a CLI tool that validates your local environment against a required environment contract before you push to production.
+safelaunch validates your environment before every push. It catches missing variables, misconfigurations, and dependency issues before they reach production — in seconds.
 
-No more "it works on my machine." No more production failures from missing environment variables or wrong runtime versions.
+Works with **Node.js, Next.js, Vite, and Create React App**. Not just backend. Any JavaScript project.
+
+🌐 [safelaunch.dev](https://karthicedric7-cloud.github.io/Orches)
 
 ---
 
-## The Problem
+## Privacy & Security
 
-Every developer has pushed code to production and watched it break because of a missing environment variable or a version mismatch. It works locally. It breaks in production. You spend hours debugging something that could have been caught in seconds.
+safelaunch runs **entirely on your machine**. It never sends your environment variables, secrets, or any project data to external servers. Your `.env` files stay local. Always.
 
-## The Solution
+---
 
-deploycheck reads your `env.manifest.json` file, checks your local `.env` file against it, and tells you exactly what will break before you push a single line of code.
+## Two commands. That's it.
+
+**Step 1 — Generate your environment manifest**
+```bash
+safelaunch init
+```
+
+Scans your codebase, finds every environment variable your app uses, and generates an `env.manifest.json` file automatically.
+
+**Step 2 — Validate before you push**
+```bash
+safelaunch validate
+```
+
+Runs 11 checks against your `.env` file and tells you exactly what will break before it does.
 
 ---
 
 ## Installation
 ```bash
-npm install -g deploycheck
+npm install -g safelaunch
 ```
 
-## Quick Start
+---
 
-**Step 1: Create your environment manifest**
-
-Add an `env.manifest.json` file to your project:
-```json
-{
-  "version": "1",
-  "runtime": {
-    "node": "20"
-  },
-  "variables": {
-    "DATABASE_URL": {
-      "required": true,
-      "description": "PostgreSQL connection string"
-    },
-    "REDIS_URL": {
-      "required": true,
-      "description": "Redis connection string"
-    },
-    "API_KEY": {
-      "required": true,
-      "description": "External API key"
-    }
-  }
-}
-```
-
-**Step 2: Run the validator**
+## Never break a push again — install the git hook
 ```bash
-deploycheck validate
+safelaunch hook install
 ```
 
-**Step 3: See exactly what is wrong**
+Blocks `git push` automatically if validation fails. Set it once, forget about it.
+
+---
+
+## What it checks
+
+1. Missing required variables
+2. Empty variables
+3. Runtime version mismatch
+4. Duplicate variables
+5. Dependencies not installed
+6. Dependency drift
+7. `.env` vs `.env.example` sync
+8. `VITE_` prefix validation
+9. `REACT_APP_` prefix validation
+10. `NEXT_PUBLIC_` awareness
+11. `.env` file priority order
+
+---
+
+## Example output
 ```
-Running deploycheck...
+Running safelaunch...
 
 ❌ MISSING VARIABLES (2 found)
-
    DATABASE_URL   required but missing from .env
    REDIS_URL      required but missing from .env
 
-✅ PASSING (1)
-
-   API_KEY   present
+✅ PASSING (9)
+   API_KEY        present
+   NODE_ENV       present
+   ...
 
 Your environment is not ready for production.
-Fix the issues above and run deploycheck again.
+Fix the issues above and run safelaunch again.
 ```
 
 ---
@@ -81,26 +91,13 @@ Fix the issues above and run deploycheck again.
 
 Add this to your GitHub Actions workflow to block deployments automatically:
 ```yaml
-- name: Install deploycheck
-  run: npm install -g .
+- name: Install safelaunch
+  run: npm install -g safelaunch
 
-- name: Run deploycheck
-  run: deploycheck validate
+- name: Validate environment
+  run: safelaunch validate
 ```
 
 ---
 
-## What it checks
-
-- Missing required environment variables
-- Runtime version mismatches between local and manifest
-
-## Coming soon
-
-- VS Code extension with inline warnings
-- Auto fix for common issues
-- Team dashboard
-
----
-
-Built for developers who are tired of production surprises.
+Built by [Karthi Cedric](https://twitter.com/karthiced) · Part of [Orches](https://karthicedric7-cloud.github.io/Orches)

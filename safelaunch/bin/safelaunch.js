@@ -7,6 +7,8 @@ if (command === 'validate') {
   require(path.join(__dirname, '../src/validate.js'));
 } else if (command === 'init') {
   require(path.join(__dirname, '../src/init.js'));
+} else if (command === 'scan') {
+  require(path.join(__dirname, '../src/scan.js'));
 } else if (command === 'hook') {
   const { installHook, uninstallHook } = require(path.join(__dirname, '../src/hook.js'));
   if (subcommand === 'install') {
@@ -20,6 +22,7 @@ if (command === 'validate') {
   }
 } else {
   console.log('\nUsage:');
+  console.log('  safelaunch scan');
   console.log('  safelaunch init');
   console.log('  safelaunch validate');
   console.log('  safelaunch hook install');

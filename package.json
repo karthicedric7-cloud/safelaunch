@@ -1,7 +1,34 @@
 {
-  "name": "node-starter",
-  "private": true,
+  "name": "safelaunch",
+  "version": "1.0.16",
+  "description": "Validate your environment before every push. Catch missing, empty, and misconfigured env variables before they break production.",
+  "main": "index.js",
+  "bin": {
+    "safelaunch": "./safelaunch/bin/safelaunch.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "env",
+    "dotenv",
+    "environment-variables",
+    "env-validator",
+    "env-check",
+    "deployment",
+    "pre-deploy",
+    "git-hook",
+    "nextjs",
+    "vite",
+    "react",
+    "cli",
+    "production",
+    "devops",
+    "safelaunch"
+  ],
+  "author": "Karthi Cedric",
+  "license": "ISC",
+  "dependencies": {
+    "posthog-node": "^5.28.2"
   }
 }
