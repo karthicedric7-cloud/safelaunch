@@ -1,14 +1,14 @@
 # safelaunch
 
-> Stop breaking production over environment variables.
+> Ship without breaking production.
 
 [![npm version](https://badge.fury.io/js/safelaunch.svg)](https://www.npmjs.com/package/safelaunch)
 
-safelaunch validates your environment before every push. It catches missing variables, misconfigurations, and dependency issues before they reach production — in seconds.
+safelaunch validates your environment before every push. Catches missing variables, empty values, duplicates, dependency drift, and prefix misconfigurations — before they reach production.
 
 Works with **Node.js, Next.js, Vite, and Create React App**. Not just backend. Any JavaScript project.
 
-🌐 [safelaunch.dev](https://karthicedric7-cloud.github.io/Orches)
+🌐 [orches.dev](https://karthicedric7-cloud.github.io/Orches)
 
 ---
 
@@ -18,21 +18,39 @@ safelaunch runs **entirely on your machine**. It never sends your environment va
 
 ---
 
-## Two commands. That's it.
-
-**Step 1 — Generate your environment manifest**
+## Try it right now — zero setup
 ```bash
-safelaunch init
+npx safelaunch scan
 ```
 
-Scans your codebase, finds every environment variable your app uses, and generates an `env.manifest.json` file automatically.
+No installation. No config. Just run it in any JavaScript project.
 
-**Step 2 — Validate before you push**
-```bash
-safelaunch validate
+Scans your entire codebase, checks your `.env`, and tells you exactly what would break your next deploy.
 ```
+Scanning your project...
 
-Runs 11 checks against your `.env` file and tells you exactly what will break before it does.
+Detected: Next.js
+
+Found 8 env variables in your codebase
+
+⚠️  DUPLICATE VARIABLES (1 found)
+
+   DATABASE_URL   defined more than once in .env
+
+❌ MISSING VARIABLES (2 found)
+
+   NEXTAUTH_SECRET   missing from .env
+   STRIPE_SECRET_KEY   missing from .env
+
+✅ PASSING (6)
+
+   API_KEY   present
+   NODE_ENV   present
+
+Your next deploy would have failed.
+
+Run safelaunch init to lock this in permanently.
+```
 
 ---
 
@@ -43,7 +61,27 @@ npm install -g safelaunch
 
 ---
 
-## Never break a push again — install the git hook
+## Lock it in permanently
+
+Once you've seen what scan finds, lock it in with two commands:
+
+**Step 1 — Generate your environment manifest**
+```bash
+safelaunch init
+```
+
+Scans your codebase and generates an `env.manifest.json` contract file automatically.
+
+**Step 2 — Validate before every push**
+```bash
+safelaunch validate
+```
+
+Runs 11 checks against your `.env` and tells you exactly what will break before it does.
+
+---
+
+## Never think about it again — install the git hook
 ```bash
 safelaunch hook install
 ```
@@ -52,7 +90,17 @@ Blocks `git push` automatically if validation fails. Set it once, forget about i
 
 ---
 
-## What it checks
+## What scan checks
+
+1. Missing variables
+2. Empty variables
+3. Duplicate variables
+4. Dependencies not installed
+5. Dependency drift
+6. `VITE_` prefix validation
+7. `REACT_APP_` prefix validation
+
+## What validate checks
 
 1. Missing required variables
 2. Empty variables
@@ -68,28 +116,9 @@ Blocks `git push` automatically if validation fails. Set it once, forget about i
 
 ---
 
-## Example output
-```
-Running safelaunch...
-
-❌ MISSING VARIABLES (2 found)
-   DATABASE_URL   required but missing from .env
-   REDIS_URL      required but missing from .env
-
-✅ PASSING (9)
-   API_KEY        present
-   NODE_ENV       present
-   ...
-
-Your environment is not ready for production.
-Fix the issues above and run safelaunch again.
-```
-
----
-
 ## CI Integration
 
-Add this to your GitHub Actions workflow to block deployments automatically:
+Block deployments automatically by adding this to your GitHub Actions workflow:
 ```yaml
 - name: Install safelaunch
   run: npm install -g safelaunch
